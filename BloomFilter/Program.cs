@@ -8,8 +8,9 @@ namespace BloomFilter
     public class Program
     {
         static string[] words;
-        static BloomFilter bFilter = new BloomFilter(2000000);
-        static string[] wordCheck = new string[100]; 
+        static BloomFilter bFilter = new BloomFilter(3000000);
+        static string[] wordCheck = new string[100];
+        static Random rand = new Random();
 
         public static void Main(string[] args)
         {
@@ -23,7 +24,12 @@ namespace BloomFilter
             var percentUsed = bFilter.bitsUsed();
             Console.WriteLine("Percent Used {0}", percentUsed);
 
-            CreateTestWords(100);
+            for (int i = 0; i < 100; i++)
+            {
+                wordCheck[i] = CreateRandomWords(5);
+            }
+
+            //CreateTestWords(100);
             CompareWords();
             
             Console.ReadLine();
@@ -65,8 +71,16 @@ namespace BloomFilter
             wordCheck[99] = "kdbxo";
         }
 
+        public static string CreateRandomWords(int length)
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyz";
+            return new string(Enumerable.Repeat(chars, length)
+                        .Select(s => s[rand.Next(s.Length)]).ToArray());
+        }
+
         public static void CompareWords()
         {
+            int count = 0;
             for (int i = 0; i < wordCheck.Length; i++)
             {
                 bool inBloom = bFilter.MightContain(wordCheck[i]);
@@ -75,8 +89,10 @@ namespace BloomFilter
                 if (inBloom && !inList)
                 {
                     Console.WriteLine("False positive with {0}", wordCheck[i]);
+                    count++;
                 }
             }
+            Console.WriteLine("Total False Positives {0}", count);
         }
     }
 }

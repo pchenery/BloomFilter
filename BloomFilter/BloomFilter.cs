@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Security.Cryptography;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -25,6 +24,9 @@ namespace BloomFilter
 
             var SHA256 = SHA256Hash(input);
             bitArray.Set(SHA256, true);
+
+            var Jenkins = JenkinsHash(input);
+            bitArray.Set(Jenkins, true);
         }
         private int MD5Hash(string input)
         {
@@ -41,12 +43,32 @@ namespace BloomFilter
             return Math.Abs(BitConverter.ToInt32(hash, 0) % size);
         }
 
+        private int JenkinsHash(string input)
+        {
+            int hash = 0;
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                hash += input[i];
+                hash += (hash << 10);
+                hash ^= (hash >> 6);
+            }
+
+            hash += (hash << 3);
+            hash ^= (hash >> 11);
+            hash += (hash << 15);
+
+            return Math.Abs(hash % size);
+        }
+
         public bool MightContain(string input)
         {
             var MD5 = MD5Hash(input);
             var SHA256 = SHA256Hash(input);
+            var Jenkins = JenkinsHash(input);
 
-            return bitArray.Get(MD5) && bitArray.Get(SHA256);
+            return bitArray.Get(MD5) && bitArray.Get(SHA256) && bitArray.Get(Jenkins);
+            //return bitArray.Get(MD5) && bitArray.Get(SHA256);
         }
 
         public double bitsUsed()
