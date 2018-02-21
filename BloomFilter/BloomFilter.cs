@@ -10,9 +10,11 @@ namespace BloomFilter
     public class BloomFilter
     {
         private readonly BitArray bitArray;
+        private readonly int size;
 
         public BloomFilter(int size)
         {
+            this.size = size;
             bitArray = new BitArray(size);
         }
 
@@ -24,21 +26,19 @@ namespace BloomFilter
             var SHA256 = SHA256Hash(input);
             bitArray.Set(SHA256, true);
         }
-        private static int MD5Hash(string input)
+        private int MD5Hash(string input)
         {
             var MD5Hash = MD5.Create();
             var hash = MD5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
-            var hashValue = BitConverter.ToUInt16(hash, 0);
 
-            return Math.Abs(hashValue);
+            return Math.Abs(BitConverter.ToInt32(hash, 0) % size);
         }
-        private static int SHA256Hash(string input)
+        private int SHA256Hash(string input)
         {
             var SHA256Hash = SHA256.Create();
             var hash = SHA256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
-            var hashValue = BitConverter.ToUInt16(hash, 0);
 
-            return Math.Abs(hashValue);
+            return Math.Abs(BitConverter.ToInt32(hash, 0) % size);
         }
 
         public bool MightContain(string input)
@@ -47,6 +47,19 @@ namespace BloomFilter
             var SHA256 = SHA256Hash(input);
 
             return bitArray.Get(MD5) && bitArray.Get(SHA256);
+        }
+
+        public double bitsUsed()
+        {
+            int count = 0;
+
+            for (int i = 0; i < bitArray.Length; i++)
+            {
+                if (bitArray[i])
+                    count++;
+            }
+
+            return Math.Floor((double)count / size * 100);
         }
     }
 }
